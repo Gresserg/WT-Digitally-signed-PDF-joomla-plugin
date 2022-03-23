@@ -1,68 +1,63 @@
 <?php
 
-/*
-*   Copyright (C) 2021  Sergey Tolkachyov
-*   Released under GNU GPL Public License
-*   License: http://www.gnu.org/copyleft/gpl.html
-*   https://web-tolk.ru
-*/
+/**
+ * @package       WT Digitally signed PDF
+ * @version       2.0.0
+ * @Author        Sergey Tolkachyov, https://web-tolk.ru
+ * @copyright     Copyright (C) 2024 Sergey Tolkachyov
+ * @license       GNU/GPL http://www.gnu.org/licenses/gpl-3.0.html
+ * @since         1.0.0
+ */
 
-defined('_JEXEC') or die('Restricted access');
+
+namespace Joomla\Plugin\System\Wt_digitally_signed_pdf\Extension;
 
 use Joomla\CMS\Date\Date;
+use Joomla\CMS\Event\Content\ContentPrepareEvent;
 use Joomla\CMS\Language\Text;
 use Joomla\CMS\Layout\FileLayout;
 use Joomla\CMS\Plugin\CMSPlugin;
 use Joomla\CMS\Factory;
-use \Sop\ASN1\Element;
-use \Sop\ASN1\Type\Constructed\Sequence;
-use \Webmasterskaya\X509\Certificate\Certificate;
-use \Smalot\PdfParser\Parser;
+use Joomla\Event\SubscriberInterface;
+use Sop\ASN1\Element;
+use Sop\ASN1\Type\Constructed\Sequence;
+use Webmasterskaya\X509\Certificate\Certificate;
+use Smalot\PdfParser\Parser;
 
-class plgSystemWt_digitally_signed_pdf extends CMSPlugin
+
+defined('_JEXEC') or die;
+
+final class Wt_digitally_signed_pdf extends CMSPlugin implements SubscriberInterface
 {
 
-	protected $autoloadlanguage = true;
 	static $article = null;
 
-	/**
-	 * Constructor.
-	 *
-	 * @param   object  &$subject  The object to observe
-	 * @param   array    $config   An optional associative array of configuration settings.
-	 *
-	 * @since   3.7.0
-	 */
-	public function __construct(&$subject, $config)
-	{
-		parent::__construct($subject, $config);
+    /**
+     * Returns an array of events this subscriber will listen to.
+     *
+     * @return array
+     *
+     * @since   5.3.0
+     */
+    public static function getSubscribedEvents(): array
+    {
+        return [
+            'onContentPrepare' => 'onContentPrepare',
+            'onAfterRoute' => 'addWtdigitallysignedpdfPreset',
 
-	}
-	
-	
-	public function onAfterInitialise()
-	{			
-		$jversion = new JVersion();
+        ];
+    }
 
-		if (version_compare($jversion->getShortVersion(), '4.0', '<'))
-		{
-			// only for Joomla 3.x
-			JLoader::registerNamespace('Sop', JPATH_LIBRARIES);
-			JLoader::registerNamespace('Webmasterskaya', JPATH_LIBRARIES);
-			JLoader::registerNamespace('Smalot', JPATH_LIBRARIES);
 
-		}
-		else
-		{
-			JLoader::registerNamespace('Sop', JPATH_LIBRARIES . '/Sop');
-			JLoader::registerNamespace('Webmasterskaya', JPATH_LIBRARIES . '/Webmasterskaya');
-			JLoader::registerNamespace('Smalot', JPATH_LIBRARIES. '/Smalot');
-		}
-	}
+    public function onContentPrepare(ContentPrepareEvent $event)
+    {
 
-	public function onContentPrepare($context, $article, $params, $limitstart = 0)
-	{
-		//Проверка есть ли строка замены в контенте
+        $context = $event->getContext();
+        $article     = $event->getItem();
+        $params  = $event->getParams();
+
+
+        //Проверка есть ли строка замены в контенте
 		if (strpos($article->text, 'wt_ds_pdf') === false)
 		{
 			return;
@@ -70,7 +65,6 @@ class plgSystemWt_digitally_signed_pdf extends CMSPlugin
 
 		// expression to search for
 		$regex = "~{wt_ds_pdf}.*?{/wt_ds_pdf}~is";
-
 
 		// process tags
 		if (preg_match_all($regex, $article->text, $matches, PREG_PATTERN_ORDER))
@@ -83,7 +77,7 @@ class plgSystemWt_digitally_signed_pdf extends CMSPlugin
 				$pdf_file = str_replace(array('"', '\'', '`'), array('&quot;', '&apos;', '&#x60;'), $pdf_file); // Address potential XSS attacks
 
 				$layoutId                          = $this->params->get('layout', 'default');
-				$layout                            = new FileLayout($layoutId, JPATH_SITE . DIRECTORY_SEPARATOR . 'plugins' . DIRECTORY_SEPARATOR . 'system' . DIRECTORY_SEPARATOR . 'wt_digitally_signed_pdf' . DIRECTORY_SEPARATOR . 'layouts');
+				$layout                            = new FileLayout($layoutId, JPATH_SITE . DIRECTORY_SEPARATOR . 'layouts' . DIRECTORY_SEPARATOR . 'plugins' . DIRECTORY_SEPARATOR . 'system' . DIRECTORY_SEPARATOR . 'wt_digitally_signed_pdf');
 
 				$digital_sign_info                 = $this->getDigitallySignedPdfInfo($pdf_file);
 				$digital_sign_info['link_to_file'] = $pdf_file;
@@ -226,5 +220,16 @@ class plgSystemWt_digitally_signed_pdf extends CMSPlugin
 				return $key;
 		endswitch;
 	}
+
+    public function addWtdigitallysignedpdfPreset()
+    {
+        // Only trigger in frontend
+        if (Factory::getApplication()->isClient('site')) {
+            /** @var Joomla\CMS\WebAsset\WebAssetManager $wa*/
+            $wa = Factory::getDocument()->getWebAssetManager();
+            $wa->getRegistry()->addRegistryFile('media/plg_system_wt_digitally_signed_pdf/joomla.asset.json');
+            return true;
+        }
+    }
 
 }
