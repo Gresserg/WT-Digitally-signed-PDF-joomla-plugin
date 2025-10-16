@@ -1,0 +1,10 @@
+@charset "UTF-8";
+
+#tooltip-container{
+	min-width: auto;
+	width: 400px;
+	font-family: inherit;
+	padding: 15px;
+	left: 60px;
+	top: 100%;
+}

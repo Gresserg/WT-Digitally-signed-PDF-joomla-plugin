@@ -1,0 +1,54 @@
+{
+	"$schema": "https://developer.joomla.org/schemas/json-schema/web_assets.json",
+	"name": "wt_digitally_signed_pdf",
+	"version": "1.0.0",
+	"description": "popper js and css library",
+	"license": "GPL-2.0-or-later",
+	"assets": [
+		{
+			"name": "wtdigitallysignedpdfscript",
+			"type": "script",
+			"uri": "plg_system_wt_digitally_signed_pdf/popper.min.js",
+			"attributes": {
+				"defer": true
+			},
+			"package": "wtdigitallysignedpdfscript",
+			"version": "6.0.5"
+		},
+		{
+			"name": "wtdigitallysignedpdfstyle",
+			"type": "style",
+			"uri": "plg_system_wt_digitally_signed_pdf/wtdigitallysignedpdfstyle.css",
+			"package": "wtdigitallysignedpdfstyle",
+			"version": "6.0.5"
+		},
+		{
+			"name": "wtdigitallysignedpdfpreset",
+			"type": "preset",
+			"uri": "",
+			"dependencies": [
+				"wtdigitallysignedpdfscript#script",
+				"wtdigitallysignedpdfstyle#style"
+			]
+		},
+		{
+			"name": "wtdigitallysignedpdfscript-remote",
+			"type": "script",
+			"uri": "https://unpkg.com/@popperjs/core@2",
+			"attributes": {
+				"defer": true
+			},
+			"package": "wtdigitallysignedpdfscript",
+			"version": "6.0.5"
+		},
+		{
+			"name": "wtdigitallysignedpdfpreset-remote",
+			"type": "preset",
+			"uri": "",
+			"dependencies": [
+				"wtdigitallysignedpdfscript-remote#script",
+				"wtdigitallysignedpdfstyle#style"
+			]
+		}
+	]
+}
